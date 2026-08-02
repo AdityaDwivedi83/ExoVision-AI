@@ -103,9 +103,9 @@ ExoVision-AI/
 - [x] Virtual environment
 - [x] Repository structure
 - [x] Dependency installation
-- [ ] Download data from MAST
-- [ ] Read FITS files
-- [ ] Target star detection
+- [x] Download data from MAST
+- [x] Read FITS files
+- [x] Target star detection
 - [ ] Aperture photometry
 - [ ] Light curve generation
 - [ ] Model training
