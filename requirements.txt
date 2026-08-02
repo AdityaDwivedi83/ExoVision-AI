@@ -1,0 +1,14 @@
+numpy
+pandas
+matplotlib
+scipy
+astropy
+lightkurve
+photutils
+opencv-python
+scikit-learn
+torch
+torchvision
+jupyter
+tqdm
+requests
