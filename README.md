@@ -113,6 +113,12 @@ ExoVision-AI/
 
 ---
 
+## First Kepler Observation
+
+The figure below shows the first raw observation frame downloaded from NASA's Kepler mission. The red marker indicates the automatically detected brightest pixel corresponding to the target star.
+
+![Kepler Frame](docs/images/kepler_first_frame.png)
+
 ## 🎯 Long-Term Goal
 
 Build a complete AI system capable of converting raw astronomical observations into exoplanet probability predictions while maintaining a transparent and reproducible scientific workflow.
