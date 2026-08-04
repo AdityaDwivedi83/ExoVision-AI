@@ -106,7 +106,7 @@ ExoVision-AI/
 - [x] Download data from MAST
 - [x] Read FITS files
 - [x] Target star detection
-- [ ] Aperture photometry
+- [x] Aperture photometry
 - [ ] Light curve generation
 - [ ] Model training
 - [ ] Deployment
