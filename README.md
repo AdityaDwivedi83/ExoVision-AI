@@ -19,6 +19,16 @@ The goal is to bridge computer vision, astronomical image processing, photometry
 
 ---
 
+## ⭐ Project Highlights
+
+- Downloads real telescope observations directly from the NASA MAST archive.
+- Reads and processes FITS Target Pixel Files.
+- Implements custom flux-weighted centroid detection.
+- Performs aperture photometry from raw telescope images.
+- Generates stellar light curves without relying on built-in astronomy pipelines.
+- Validates the custom implementation against the official Lightkurve library.
+- Designed as a complete end-to-end exoplanet detection pipeline.
+
 ## 🔭 Pipeline
 
 ```text
@@ -50,6 +60,27 @@ Predict Exoplanet Probability
 ```
 
 ---
+
+---
+
+# 📊 Results
+
+## Raw Kepler Target Pixel Frame
+
+The image below shows a raw Target Pixel File (TPF) frame downloaded from the NASA MAST archive. The red marker indicates the detected stellar centroid, while the circular aperture is used to perform aperture photometry.
+
+![Kepler Frame](docs/images/kepler_first_frame.png)
+
+---
+
+## Light Curve Validation
+
+To validate the custom photometry pipeline, the generated light curve was compared against the official Lightkurve implementation.
+
+The two curves closely overlap, demonstrating that the custom centroid detection and aperture photometry pipeline successfully reproduces the behavior of the reference astronomical software.
+
+![Validation](docs/images/custom_vs_lightkurve.png)
+
 
 ## 🛰 Features
 
@@ -99,25 +130,25 @@ ExoVision-AI/
 
 ## 🚧 Current Progress
 
-- [x] Project setup
-- [x] Virtual environment
-- [x] Repository structure
-- [x] Dependency installation
-- [x] Download data from MAST
-- [x] Read FITS files
-- [x] Target star detection
-- [x] Aperture photometry
-- [ ] Light curve generation
-- [ ] Model training
-- [ ] Deployment
+- [x] Project initialization
+- [x] Virtual environment setup
+- [x] NASA MAST integration
+- [x] Download Target Pixel Files
+- [x] FITS/TPF reader
+- [x] Raw frame visualization
+- [x] Brightest pixel detection
+- [x] Flux-weighted centroid detection
+- [x] Circular aperture photometry
+- [x] Generate custom light curves
+- [x] Validate against Lightkurve
+- [ ] Background subtraction
+- [ ] Outlier removal
+- [ ] Transit detection algorithm
+- [ ] Feature extraction
+- [ ] Machine learning classifier
+- [ ] Streamlit deployment
 
 ---
-
-## First Kepler Observation
-
-The figure below shows the first raw observation frame downloaded from NASA's Kepler mission. The red marker indicates the automatically detected brightest pixel corresponding to the target star.
-
-![Kepler Frame](docs/images/kepler_first_frame.png)
 
 ## 🎯 Long-Term Goal
 
