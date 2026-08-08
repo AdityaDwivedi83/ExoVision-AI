@@ -1,16 +1,18 @@
 from src.pipeline.pipeline import ExoVisionPipeline
 
-pipeline = ExoVisionPipeline("Kepler-10")
 
-pipeline.run()
+pipeline = ExoVisionPipeline(
+    "KIC 7350067"
+)
 
-pipeline.summary()
+time, flux = pipeline.run()
 
-print("=" * 50)
-print("Pipeline Summary")
-print("=" * 50)
+print("\n----------------------------")
+print("TEST RESULTS")
+print("----------------------------")
 
-print("Target:", pipeline.target)
-print("Frames:", len(pipeline.flux))
-print("Time Points:", len(pipeline.time))
-print("Median Flux:", pipeline.flux.mean())
+print("Time shape:", time.shape)
+print("Flux shape:", flux.shape)
+
+print("First 10 flux values:")
+print(flux[:10])

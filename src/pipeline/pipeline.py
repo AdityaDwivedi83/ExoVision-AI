@@ -1,125 +1,203 @@
+import os
 import numpy as np
+
 from lightkurve import search_targetpixelfile
 
 from src.cv.star_detector import find_star_centroid
 from src.photometry.aperture_photometry import measure_flux
 from src.signal_processing.lightcurve_cleaner import (
     remove_outliers,
-    normalize_flux,
+    normalize_flux
 )
 
 
 class ExoVisionPipeline:
 
-    def __init__(
-        self,
-        target,
-        mission="Kepler",
-        aperture_radius=2,
-        sigma=5,
-    ):
+    def __init__(self, target):
 
         self.target = target
-        self.mission = mission
-        self.aperture_radius = aperture_radius
-        self.sigma = sigma
 
         self.tpf = None
         self.time = None
         self.flux = None
-        self.centroid = None
 
-    def download(self):
+    # --------------------------------------------------
+    # STEP 1: Download NASA Target Pixel File
+    # --------------------------------------------------
 
-        print(f"\nDownloading {self.target} ({self.mission})...\n")
+    def download_data(self):
 
-        self.tpf = (
-            search_targetpixelfile(
-                self.target,
-                mission=self.mission
-            )
-            .download()
+        print(f"\nSearching MAST for {self.target}...")
+
+        search_result = search_targetpixelfile(
+            self.target,
+            mission="Kepler"
         )
 
-        return self
+        if len(search_result) == 0:
 
-    def compute_centroid(self):
-
-        print("Computing stellar centroid...")
-
-        first_frame = self.tpf.flux[0].value
-
-        self.centroid = find_star_centroid(first_frame)
+            raise RuntimeError(
+                f"No Target Pixel File found for {self.target}"
+            )
 
         print(
-            f"Centroid located at "
-            f"({self.centroid[0]:.2f}, {self.centroid[1]:.2f})"
+            f"Found {len(search_result)} Target Pixel File(s)"
         )
 
-        return self
+        self.tpf = search_result[0].download()
 
-    def photometry(self):
+        if self.tpf is None:
+
+            raise RuntimeError(
+                f"Could not download TPF for {self.target}"
+            )
+
+        print("Target Pixel File downloaded.")
+
+        return self.tpf
+
+    # --------------------------------------------------
+    # STEP 2: Perform Aperture Photometry
+    # --------------------------------------------------
+
+    def extract_flux(self):
+
+        if self.tpf is None:
+
+            raise RuntimeError(
+                "TPF has not been downloaded."
+            )
+
+        print("\nPerforming aperture photometry...")
 
         brightness = []
-
-        print("Performing aperture photometry...")
 
         for frame in self.tpf.flux:
 
             frame = frame.value
 
+            centroid = find_star_centroid(frame)
+
             flux = measure_flux(
                 frame,
-                self.centroid,
-                radius=self.aperture_radius
+                centroid
             )
 
             brightness.append(flux)
 
-        self.time = self.tpf.time.value
-        self.flux = np.array(brightness)
+        brightness = np.asarray(brightness)
 
-        return self
-
-    def clean(self):
-
-        print("Cleaning light curve...")
-
-        self.flux = remove_outliers(
-            self.flux,
-            sigma=self.sigma
+        self.time = np.asarray(
+            self.tpf.time.value
         )
 
-        self.flux = normalize_flux(self.flux)
+        self.flux = brightness
 
-        return self
+        print(
+            f"Extracted {len(self.flux)} flux measurements."
+        )
+
+        return self.time, self.flux
+
+    # --------------------------------------------------
+    # STEP 3: Clean Light Curve
+    # --------------------------------------------------
+
+    def preprocess(self):
+
+        if self.flux is None:
+
+            raise RuntimeError(
+                "Flux has not been extracted."
+            )
+
+        print("\nCleaning light curve...")
+
+        clean_flux = remove_outliers(
+            self.flux
+        )
+
+        print("Normalizing light curve...")
+
+        normalized_flux = normalize_flux(
+            clean_flux
+        )
+
+        self.flux = np.asarray(
+            normalized_flux
+        )
+
+        return self.time, self.flux
+
+    # --------------------------------------------------
+    # STEP 4: Save Light Curve
+    # --------------------------------------------------
+
+    def save_light_curve(self):
+
+        if self.time is None or self.flux is None:
+
+            raise RuntimeError(
+                "No processed light curve available."
+            )
+
+        output_dir = (
+            "data/processed/light_curves"
+        )
+
+        os.makedirs(
+            output_dir,
+            exist_ok=True
+        )
+
+        filename = (
+            str(self.target)
+            .replace(" ", "_")
+            .replace("/", "_")
+            .replace("\\", "_")
+            .replace(":", "_")
+        )
+
+        output_path = os.path.join(
+            output_dir,
+            f"{filename}.npz"
+        )
+
+        np.savez(
+            output_path,
+            time=np.asarray(self.time),
+            flux=np.asarray(self.flux)
+        )
+
+        print(
+            f"\nLight curve saved to:\n"
+            f"{output_path}"
+        )
+
+        return output_path
+
+    # --------------------------------------------------
+    # STEP 5: Complete Pipeline
+    # --------------------------------------------------
 
     def run(self):
 
-        return (
-            self.download()
-                .compute_centroid()
-                .photometry()
-                .clean()
-        )
+        print("\n" + "=" * 55)
+        print(f"ExoVision Pipeline: {self.target}")
+        print("=" * 55)
 
-    def summary(self):
+        # Download NASA data
+        self.download_data()
 
-        print("\n" + "=" * 60)
-        print("ExoVision Pipeline Summary")
-        print("=" * 60)
+        # Pixel frames → flux measurements
+        self.extract_flux()
 
-        print(f"Target           : {self.target}")
-        print(f"Mission          : {self.mission}")
-        print(f"Frames           : {len(self.flux)}")
-        print(f"Centroid:"f"({self.centroid[0]:.2f}, {self.centroid[1]:.2f})")
-        print(f"Aperture Radius  : {self.aperture_radius}")
-        print(f"Sigma Threshold  : {self.sigma}")
+        # Clean + normalize
+        self.preprocess()
 
-        print(f"Time Range       : {self.time[0]:.2f} -> {self.time[-1]:.2f}")
+        # Save for CNN
+        self.save_light_curve()
 
-        print(f"Mean Flux        : {self.flux.mean():.6f}")
-        print(f"Minimum Flux     : {self.flux.min():.6f}")
-        print(f"Maximum Flux     : {self.flux.max():.6f}")
+        print("\nPipeline completed successfully!")
 
-        print("=" * 60)
+        return self.time, self.flux

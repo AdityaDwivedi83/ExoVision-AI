@@ -15,15 +15,28 @@ def circular_aperture (frame, center, radius=2):
 
     return mask
 
-def measure_flux (frame, center, radius=2):
+def measure_flux(frame, center, radius=2):
     """
-    Measure total flux inside the aperture
+    Measure background-subtracted stellar flux.
     """
 
     frame = np.nan_to_num(frame)
 
-    mask = circular_aperture(frame, center, radius=2)
+    mask = circular_aperture(frame, center, radius)
 
-    total_flux = frame[mask].sum()
+    # Flux inside the aperture
+    aperture_flux = frame[mask].sum()
 
-    return total_flux
+    # Background pixels are everything outside the aperture
+    background_pixels = frame[~mask]
+
+    # Ignore NaNs (already converted, but this is safe)
+    background_pixels = background_pixels[np.isfinite(background_pixels)]
+
+    background_level = np.median(background_pixels)
+
+    background_flux = background_level * mask.sum()
+
+    net_flux = aperture_flux - background_flux
+
+    return net_flux
